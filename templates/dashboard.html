@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .header h2 {
+            margin: 0;
+            color:rgb(255, 255, 255);
+        }
+        .profile-icon {
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .profile-icon:hover {
+            color: #ddd;
+        }
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            color: #333;
+        }
+        .profile-dropdown.active {
+            display: block;
+        }
+        .profile-item {
+            margin-bottom: 10px;
+        }
+        .logout-btn {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #ff4d4d;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .logout-btn:hover {
+            background-color: #e60000;
+        }
+        .dashboard-content {
+            margin-top: 60px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+        .welcome {
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+        }
+        .card h4 {
+            margin-top: 0;
+        }
+        .card input[type="number"], .card input[type="text"], .card input[type="password"] {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: 200px;
+        }
+        .card button {
+            padding: 5px 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .card button:hover {
+            background-color: #555;
+        }
+        .flash-messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .flash-messages li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+        .flash-messages .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .flash-messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Dashboard</h2>
+        <span class="profile-icon" onclick="toggleProfile()">👤</span>
+        <div class="profile-dropdown" id="profileDropdown">
+            <div class="profile-item">
+                <strong>Username:</strong> {{ user.username }}
+            </div>
+            <div class="profile-item">
+                <strong>Jenis User:</strong> 
+                {% if user.__class__.__name__ == 'NasabahBiasa' %}
+                    Nasabah Biasa
+                {% elif user.__class__.__name__ == 'NasabahPrioritas' %}
+                    Nasabah Prioritas
+                {% elif user.__class__.__name__ == 'Admin' %}
+                    Admin
+                {% elif user.__class__.__name__ == 'Merchant' %}
+                    Merchant
+                {% endif %}
+            </div>
+            <div class="profile-item">
+                <strong>ID:</strong> {{ user.id }}
+            </div>
+            {% if user.__class__.__name__ in ['NasabahBiasa', 'NasabahPrioritas'] %}
+                <div class="profile-item">
+                    <strong>Nomor Rekening:</strong> {{ user.nomor_rekening }}
+                </div>
+                <div class="profile-item">
+                    <button onclick="alert('Saldo: {{ user.formatted_saldo }}')">Cek Saldo</button>
+                </div>
+            {% endif %}
+            {% if user.__class__.__name__ == 'NasabahPrioritas' %}
+                <div class="profile-item">
+                    <button onclick="alert('Poin Loyalitas: {{ user.lihat_poin() }}')">Lihat Poin</button>
+                </div>
+            {% endif %}
+            <li style="list-style: none;">
+                <form action="{{ url_for('ganti_password') }}" method="get" style="display: inline;">
+                    <button type="submit" class="btn" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                        Ganti Password
+                    </button>
+                </form>
+            </li>
+            <div class="profile-item">
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-content">
+        <div class="welcome">
+            <h3>Selamat datang, {{ user.username }}!</h3>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% if user.__class__.__name__ in ['NasabahBiasa', 'NasabahPrioritas'] %}
+            <div class="card">
+                <h4>Topup Saldo</h4>
+                <form action="{{ url_for('topup') }}" method="POST">
+                    <input type="number" name="jumlah" placeholder="Jumlah" step="0.01" required>
+                    <button type="submit">Topup</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h4>Transfer Saldo</h4>
+                <form action="{{ url_for('transfer') }}" method="POST">
+                    <input type="text" name="nomor_rekening" placeholder="Nomor Rekening Tujuan" required>
+                    <input type="number" name="jumlah" placeholder="Jumlah" step="0.01" required>
+                    <button type="submit">Transfer</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h4>Tarik Saldo</h4>
+                <form action="{{ url_for('tarik') }}" method="POST">
+                    <input type="number" name="jumlah" placeholder="Jumlah" step="0.01" required>
+                    <button type="submit">Tarik</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h4>Permintaan Penarikan Pending</h4>
+                {% if pending_withdrawals %}
+                    <ul>
+                        {% for request in pending_withdrawals %}
+                            <li>
+                                ID: {{ request['id'] }}, 
+                                Jumlah: {{ request['jumlah'] | rupiah }}, 
+                                Tanggal: {{ request['tanggal'] }}, 
+                                Status: {{ request['status'] }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Tidak ada permintaan penarikan pending.</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h4>Permintaan Transfer Pending</h4>
+                {% if pending_transfers %}
+                    <ul>
+                        {% for request in pending_transfers %}
+                            <li>
+                                ID: {{ request['id'] }}, 
+                                Ke: {{ request['nomor_rekening_tujuan'] }}, 
+                                Jumlah: {{ request['jumlah'] | rupiah }}, 
+                                Tanggal: {{ request['tanggal'] }}, 
+                                Status: {{ request['status'] }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Tidak ada permintaan transfer pending.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if user.__class__.__name__ == 'NasabahPrioritas' %}
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="{{ url_for('hadiah') }}" class="btn" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    Klaim Hadiah
+                </a>
+            </div>
+        {% endif %}
+
+        {% if user.__class__.__name__ == 'Admin' %}
+        <div>
+            <h3>Hapus Nasabah</h3>
+            <a href="{{ url_for('hapus_nasabah') }}">Lihat Daftar Nasabah untuk Dihapus</a>
+        </div>
+        <div class="pending-registrations">
+            <h3>Permintaan Registrasi Nasabah</h3>
+            {% if pending_registrations %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Tipe</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in pending_registrations %}
+                        <tr>
+                            <td>{{ request['id'] }}</td>
+                            <td>{{ request['username'] }}</td>
+                            <td>{{ request['email'] }}</td>
+                            <td>{{ request['user_type'] }}</td>
+                            <td>{{ request['tanggal'] }}</td>
+                            <td>
+                                <form action="{{ url_for('approve_registration') }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="request_id" value="{{ request['id'] }}">
+                                    <button type="submit" name="action" value="approve" class="btn-claim btn-primary">Setuju</button>
+                                </form>
+                                <form action="{{ url_for('approve_registration') }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="request_id" value="{{ request['id'] }}">
+                                    <button type="submit" name="action" value="reject" class="btn-claim btn-secondary">Tolak</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Tidak ada permintaan registrasi pending.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+        {% if user.__class__.__name__ == 'Merchant' %}
+            <div class="card">
+                <h4>Permintaan Penarikan yang Menunggu Persetujuan</h4>
+                {% if pending_withdrawals %}
+                    <ul>
+                        {% for request in pending_withdrawals %}
+                            <li>
+                                Nasabah: {{ request['username'] }} ({{ request['nomor_rekening'] }}), 
+                                Jumlah: {{ request['jumlah'] | rupiah }}, 
+                                Tanggal: {{ request['tanggal'] }}
+                                <form action="{{ url_for('approve_penarikan') }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="permintaan_id" value="{{ request['id'] }}">
+                                    <button type="submit" name="action" value="approve">Setujui</button>
+                                    <button type="submit" name="action" value="reject">Tolak</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Tidak ada permintaan penarikan yang menunggu persetujuan.</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h4>Permintaan Transfer yang Menunggu Persetujuan</h4>
+                {% if pending_transfers %}
+                    <ul>
+                        {% for request in pending_transfers %}
+                            <li>
+                                Nasabah: {{ request['username'] }} ({{ request['nomor_rekening'] }}), 
+                                Ke: {{ request['nomor_rekening_tujuan'] }}, 
+                                Jumlah: {{ request['jumlah'] | rupiah }}, 
+                                Tanggal: {{ request['tanggal'] }}
+                                <form action="{{ url_for('approve_transfer') }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="permintaan_id" value="{{ request['id'] }}">
+                                    <button type="submit" name="action" value="approve">Setujui</button>
+                                    <button type="submit" name="action" value="reject">Tolak</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Tidak ada permintaan transfer yang menunggu persetujuan.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    <script>
+        function toggleProfile() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const icon = document.querySelector('.profile-icon');
+            if (!dropdown.contains(event.target) && !icon.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Digital - Login/Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="form register">
+            <header>Register</header>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="{{ url_for('register') }}">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="email" name="email" placeholder="Email address" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <select name="user_type" required>
+                    <option value="nasabah_biasa">Nasabah Biasa</option>
+                    <option value="nasabah_prioritas">Nasabah Prioritas</option>
+                    <option value="admin">Admin</option>
+                    <option value="merchant">Merchant</option>
+                </select>
+                <input type="submit" value="Register">
+            </form>
+        </div>
+        <div class="form login">
+            <header>Login</header>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="email" name="email" placeholder="Email address" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="submit" value="Login">
+            </form>
+        </div>
+    </div>
+    <script>
+        const wrapper = document.querySelector(".wrapper");
+        const loginLink = document.querySelector(".login-link");
+        const signupLink = document.querySelector(".signup-link");
+
+        document.querySelector(".form.login header").addEventListener("click", () => {
+            wrapper.classList.add('active');
+        });
+
+        document.querySelector(".form.register header").addEventListener("click", () => {
+            wrapper.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

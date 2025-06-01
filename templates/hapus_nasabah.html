@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hapus Nasabah</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .btn-hapus {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .btn-hapus:hover {
+            background-color: #c82333;
+        }
+        .btn-kembali {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        .btn-kembali:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Daftar Nasabah</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="padding: 10px; margin-bottom: 10px; border-radius: 3px; 
+                            {% if category == 'success' %}background-color: #d4edda; color: #155724;{% else %}background-color: #f8d7da; color: #721c24;{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if nasabah_list %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nasabah ID</th>
+                    <th>Username</th>
+                    <th>Tipe Nasabah</th>
+                    <th>Nomor Rekening</th>
+                    <th>Saldo</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nasabah in nasabah_list %}
+                    <tr>
+                        <td>{{ nasabah.nasabahID }}</td>
+                        <td>{{ nasabah.username }}</td>
+                        <td>{{ nasabah.tipe_nasabah }}</td>
+                        <td>{{ nasabah.nomor_rekening }}</td>
+                        <td>{{ nasabah.saldo | rupiah }}</td>
+                        <td>
+                            <form action="{{ url_for('hapus_nasabah') }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="nasabahID" value="{{ nasabah.nasabahID }}">
+                                <button type="submit" class="btn-hapus" onclick="return confirm('Apakah Anda yakin ingin menghapus nasabah ini?')">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Tidak ada nasabah yang terdaftar.</p>
+    {% endif %}
+
+    <a href="{{ url_for('dashboard_page') }}" class="btn-kembali">Kembali ke Dashboard</a>
+</body>
+</html>
